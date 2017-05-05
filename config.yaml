@@ -1,0 +1,13 @@
+gmail:
+  user: RobertJohnCooper@gmail.com
+  password: C0ntent123
+
+scraper:
+  imap_search_string: 'SUBJECT "WestEndAgents"'
+  search_fields:
+    price_psf:
+      reg_ex: blah
+      data_type: blah
+
+
+
