@@ -9,5 +9,16 @@ scraper:
       reg_ex: blah
       data_type: blah
 
+area_mappings:
+  east_london:
+    name: 'East London'
+    postcodes: ['E1', 'E18H', 'E2', 'EC1', 'EC1A', 'EC1M', 'EC1N', 'EC1R', 'EC1Y', 'EC2A', 'EC2M', 'EC3V']
+  west_london
 
+
+ 'N1', 'N19', 'NW1', 'NW5', 'R7', 'SE1', 'SW1',
+       'SW10', 'SW1A', 'SW1E', 'SW1P', 'SW1Y', 'SW9', 'TW9', 'W1', 'W11',
+       'W1B', 'W1C', 'W1D', 'W1F', 'W1H', 'W1J', 'W1K', 'W1S', 'W1T', 'W1U',
+       'W1W', 'W2', 'W8', 'WC1A', 'WC1B', 'WC1H', 'WC1N', 'WC1R', 'WC1V',
+       'WC1X', 'WC2', 'WC2B', 'WC2E', 'WC2H', 'WC2N', 'WC2R'
 

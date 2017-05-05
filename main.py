@@ -60,6 +60,7 @@ def geocode_dic(loc, pc, ac):
                 'address': gg.address,
                 'lng': gg.lng,
                 'lat': gg.lat,
+                'hood': gg.neighborhood,
                 'post_code': pc,
                 'area_code': ac}
         if gg.status is 'OVER_QUERY_LIMIT':
@@ -153,5 +154,5 @@ def all_data():
     d.index.name = 'id'
     return d
 
-del_all()
+# del_all()
 update_database()
