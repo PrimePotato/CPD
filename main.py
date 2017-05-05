@@ -21,6 +21,12 @@ def extract_postcode(s):
         return rgx.group()
     except Exception:
         print('Extract post code issue {}'.format(s))
+        s.replace('O', '0')
+        try:
+            rgx = re.search('[a-zA-Z]{1,2}\d{1,2}([a-zA-Z])?(\s)?\d{1,2}[a-zA-Z]{2}', s)
+            return rgx.group()
+        except Exception:
+            return None
         return None
 
 
@@ -58,10 +64,15 @@ def geocode_dic(loc, pc, ac):
                 'area_code': ac}
         if gg.status is 'OVER_QUERY_LIMIT':
             break
-    if pc is not loc:
+    if pc is not loc and pc is not None:
         return geocode_dic(pc, pc, ac)
-    if ac is not loc:
+    if ac is not loc and ac is not None:
         return geocode_dic(ac, pc, ac)
+    return {'address': None,
+            'lng': None,
+            'lat': None,
+            'post_code': None,
+            'area_code': None}
 
 
 def update_database():
@@ -112,7 +123,10 @@ def upload_disposal(msg, uid):
     cfs = {f: _clean_extract(v) for f, v in efs.items()}
 
     pc = extract_postcode(cfs['location'])
-    ac = extract_areacode(pc) or extract_areacode(cfs['location'])
+    if pc:
+        ac = extract_areacode(pc)
+    else:
+        ac = extract_areacode(cfs['location'])
     gd = geocode_dic(cfs['location'], pc, ac)
 
     cfs['date_posted'] = dt.strptime(cfs['date_posted'], '%d/%m/%Y')
@@ -121,8 +135,7 @@ def upload_disposal(msg, uid):
     except Exception:
         ex = {'size_avg': None}
 
-    rld = {**cfs, **ex, **gd}
-    rld['email_id'] = uid
+    rld = {'email_id': int(uid), **cfs, **ex, **gd}
 
     l = Disposal(**rld)
     db.session.add(l)
@@ -140,5 +153,5 @@ def all_data():
     d.index.name = 'id'
     return d
 
-# del_all()
+del_all()
 update_database()
