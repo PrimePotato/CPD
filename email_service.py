@@ -10,7 +10,6 @@ sch_str = 'SUBJECT "[WestEndAgents.com]"'
 class Extractor(object):
     def __init__(self, username, password):
         self.mail = imaplib.IMAP4_SSL('imap.gmail.com')
-        # self.mail.login('robert.cooper@peppercorn.london', 'C0ntent123qwerty')
         self.mail.login(username, password)
         self.mail.select(src)
         self.uids_src = self.uids_from_search(sch_str)

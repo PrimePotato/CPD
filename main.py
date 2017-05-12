@@ -1,32 +1,38 @@
 
 import re
 import pandas as pd
-from db_flask.manage import Disposal, db
+
+from area_mapping import areacode_to_hood, area_list
+from db_flask.manage import Disposal, db, Acquisition, AcquisitionArea, RejectedArea
 import email_service
-from scraper import regex_dict, extract_field
+from scraper import dsp_regex, extract_field, acq_regex
 from datetime import datetime as dt
 from geopy.geocoders import Nominatim
 import geocoder as gcd
 import time
 
+
 import locale
 locale.setlocale(locale.LC_ALL, 'uk')
 geo = Nominatim()
 esx = email_service.Extractor('robert.cooper@peppercorn.london', 'C0ntent123qwerty')
+area_list = area_list()
 
 
-def extract_postcode(s):
+def extract_postcode(s, rec=True):
     try:
         rgx = re.search('[a-zA-Z]{1,2}\d{1,2}([a-zA-Z])?(\s)?\d{1,2}[a-zA-Z]{2}', s)
         return rgx.group()
-    except Exception:
+    except AttributeError:
+        if rec:
+            x = extract_postcode(s.replace('O', '0'), False)
+            if x:
+                return x
+        if rec:
+            x = extract_postcode(s.replace('I', '1'), False)
+            if x:
+                return x
         print('Extract post code issue {}'.format(s))
-        s.replace('O', '0')
-        try:
-            rgx = re.search('[a-zA-Z]{1,2}\d{1,2}([a-zA-Z])?(\s)?\d{1,2}[a-zA-Z]{2}', s)
-            return rgx.group()
-        except Exception:
-            return None
         return None
 
 
@@ -34,7 +40,7 @@ def extract_areacode(s):
     try:
         rgx = re.search('[a-zA-Z]{1,2}\d{1,2}[a-zA-Z]?', s)
         return rgx.group()
-    except Exception:
+    except AttributeError:
         print('Extract area code issue {}'.format(s))
         return None
 
@@ -45,56 +51,69 @@ def _clean_extract(s):
             d = locale.atof(s)
             return d
         except Exception:
-            return s.replace('\\r\\n', '').replace('\\xe2\\x80\\x93', '-').replace('\\x96', '-').lstrip().rstrip()
+            return s.replace('\\r\\n', '').replace('\\xe2\\x80\\x93', '-').replace('\\x96', '-')\
+                .lstrip().rstrip().replace('\\', '')
 
 
-def geocode_dic(loc, pc, ac):
+def geocode_dic(loc):
+    gl = google_location(loc)
+    if gl:
+        return gl
+    pc = extract_postcode(loc)
+    if pc:
+        gl_pc = google_location(pc)
+        if gl_pc:
+            return gl_pc
+    ac = extract_areacode(loc)
+    if ac:
+        gl_ac = google_location(ac)
+        if gl_ac:
+            return gl_ac
+    return {'address': None,
+            'lng': None,
+            'lat': None,
+            'post_code': None,
+            'area_code': None,
+            'hood': None}
+
+
+def google_location(loc):
     time.sleep(0.5)
-    gg = gcd.google(loc + ', London')
+    gg = gcd.google(loc + ', London UK')
     while gg.status != 'ZERO_RESULTS':
-        print(gg.status)
-        if gg.status is 'OK':
-            if not pc:
-                pc = gg.postal
+        if gg.status == 'OK':
+            pc = gg.postal
+            if len(pc) > 4:
+                ac = pc[:pc.find(' ')]
+            else:
+                ac = pc
             return {
                 'address': gg.address,
                 'lng': gg.lng,
                 'lat': gg.lat,
                 'hood': gg.neighborhood,
+                'my_hood': areacode_to_hood(ac),
                 'post_code': pc,
                 'area_code': ac}
         if gg.status is 'OVER_QUERY_LIMIT':
-            break
-    if pc is not loc and pc is not None:
-        return geocode_dic(pc, pc, ac)
-    if ac is not loc and ac is not None:
-        return geocode_dic(ac, pc, ac)
-    return {'address': None,
-            'lng': None,
-            'lat': None,
-            'post_code': None,
-            'area_code': None}
+            return None
 
 
 def update_database():
-
     print('***Fetching Email***')
     mbs = esx.message_bodies()
+    print('***Identified {} email(s)***'.format(len(mbs)))
     for k, m in mbs.items():
-        # print('--- Processing Email with UID {}'.format(k) + '-------------------------------------------------')
         listing_type = determine_listing_type(m)
+        rpt = None
         if listing_type == 'Acquisition':
-            pass
-            # rpt = upload_acquisition(m)
-            # if not rpt:
-            #     print('!!! Upload failed for UID {} !!!'.format(k))
-            #     continue
+            rpt = upload_acquisition(m, k)
         elif listing_type == 'Disposal':
             rpt = upload_disposal(m, k)
-            if rpt:
-                print('Database updated with UID {}'.format(k))
-            else:
-                pass
+        if rpt:
+            print('{} added with UID {}'.format(listing_type, k))
+        else:
+            print('{} failed to upload with UID {}'.format(listing_type, k))
 
 
 def determine_listing_type(msg):
@@ -106,36 +125,40 @@ def determine_listing_type(msg):
         return 'Unrecognised'
 
 
-def upload_acquisition(msg):
-    efs = {f: (extract_field(v, msg)) for f, v in regex_dict.items()}
-
-    if not efs['location']:
+def upload_acquisition(msg, uid):
+    efs = {f: (extract_field(v, msg)) for f, v in acq_regex.items()}
+    if not efs['areas']:
         return False
+    cfs = {f: _clean_extract(v) for f, v in efs.items()}
+    cfs['date_posted'] = dt.strptime(cfs['date_posted'], '%d/%m/%Y')
+    ex = {'budget_min': None, 'budget_max': None}
+    rld = {'email_id': int(uid), **cfs, **ex}
+    db.session.add(Acquisition(**rld))
 
+    for a in efs['areas'].split(', '):
+        if a in area_list:
+            aa = {'email_id': int(uid), 'description': a}
+            db.session.add(AcquisitionArea(**aa))
+        else:
+            aa = {'email_id': int(uid), 'description': a}
+            db.session.add(RejectedArea(**aa))
+            print('Area not recognized: {}'.format(a))
+
+    db.session.commit()
     return True
 
 
 def upload_disposal(msg, uid):
-    efs = {f: (extract_field(v, msg)) for f, v in regex_dict.items()}
-
+    efs = {f: (extract_field(v, msg)) for f, v in dsp_regex.items()}
     if not efs['location']:
         return False
-
     cfs = {f: _clean_extract(v) for f, v in efs.items()}
-
-    pc = extract_postcode(cfs['location'])
-    if pc:
-        ac = extract_areacode(pc)
-    else:
-        ac = extract_areacode(cfs['location'])
-    gd = geocode_dic(cfs['location'], pc, ac)
-
+    gd = geocode_dic(cfs['location'])
     cfs['date_posted'] = dt.strptime(cfs['date_posted'], '%d/%m/%Y')
     try:
         ex = {'size_avg': (cfs['size_min'] + cfs['size_max']) / 2}
     except Exception:
         ex = {'size_avg': None}
-
     rld = {'email_id': int(uid), **cfs, **ex, **gd}
 
     l = Disposal(**rld)
@@ -146,13 +169,42 @@ def upload_disposal(msg, uid):
 
 def del_all():
     Disposal.query.delete()
+    Acquisition.query.delete()
 
 
-def all_data():
+def all_disposals():
     qry = db.session.query(Disposal).all()
     d = pd.DataFrame([l.to_dict() for l in qry])
     d.index.name = 'id'
     return d
 
+
+def all_acquisitions():
+    qry = db.session.query(Acquisition).all()
+    d = pd.DataFrame([l.to_dict() for l in qry])
+    d.index.name = 'id'
+    return d
+
+
+def all_acquisition_areas():
+    qry = db.session.query(AcquisitionArea).all()
+    d = pd.DataFrame([l.to_dict() for l in qry])
+    d.index.name = 'id'
+    return d
+
+
+def split_areas(s):
+    spt = s.split((', '))
+    spt2 = [a.split('/') if '/' in a else a for a in spt]
+    spt_final = []
+    for s in spt2:
+        if isinstance(s, list):
+            [spt_final.append(x) for x in s]
+        else:
+            spt_final.append(s)
+    return spt_final
+
+
 # del_all()
-update_database()
+# update_database()
+

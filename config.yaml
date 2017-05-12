@@ -10,15 +10,111 @@ scraper:
       data_type: blah
 
 area_mappings:
-  east_london:
+  east:
     name: 'East London'
     postcodes: ['E1', 'E18H', 'E2', 'EC1', 'EC1A', 'EC1M', 'EC1N', 'EC1R', 'EC1Y', 'EC2A', 'EC2M', 'EC3V']
-  west_london
+  west:
+    name: 'West London'
+    postcodes: ['TW9', 'W1', 'W11', 'W1B', 'W1C', 'W1D', 'W1F', 'W1H', 'W1J', 'W1K', 'W1S', 'W1T', 'W1U', 'W1W', 'W2', 'W8', 'WC1A', 'WC1B', 'WC1H', 'WC1N', 'WC1R', 'WC1V', 'WC1X', 'WC2', 'WC2B', 'WC2E', 'WC2H', 'WC2N', 'WC2R']
+  north:
+    name: 'North London'
+    postcodes: ['N1', 'N19', 'NW1', 'NW5', 'R7']
+  north_west:
+    name: 'North West London'
+    postcodes: ['NW1', 'NW5']
+  south:
+    name: 'South London'
+    postcodes: ['SE1', 'SW1','SW10', 'SW1A', 'SW1E', 'SW1P', 'SW1Y', 'SW9']
+  ec:
+    name: 'East Central London'
+    postcodes: ['EC1', 'EC1A', 'EC1M', 'EC1N', 'EC1R', 'EC1Y', 'EC2A', 'EC2M', 'EC3V']
+  wc:
+    name: 'West Central London'
+    postcodes: ['WC1A', 'WC1B', 'WC1H', 'WC1N', 'WC1R', 'WC1V', 'WC1X', 'WC2', 'WC2B', 'WC2E', 'WC2H', 'WC2N', 'WC2R']
+
+areacode_mapping:
+  E1: 'East London'
+  E2: 'East London'
+  EC1A: 'East Central London'
+  EC1M: 'Clerkenwell'
+  EC1N: 'East Central London'
+  EC1R: 'East Central London'
+  EC2: 'East Central London'
+  EC2A: 'East Central London'
+  EC2M: 'East Central London'
+  EC3M: 'East Central London'
+  EC3V: 'East Central London'
+  N1: 'North London'
+  N19: 'North London'
+  NW: 'North West London'
+  NW1: 'North West London'
+  NW5: 'North West London'
+  SE1: 'South East London'
+  SW1: 'South West London'
+  SW10: 'Chelsea'
+  SW1A: 'Westminster'
+  SW1E: 'Westminster'
+  SW1P: 'Westminster'
+  SW1W: 'Westminster'
+  SW1Y: 'St. James'
+  SW9: 'Brixton'
+  TW9: 'Richmond'
+  W: 'West London'
+  W1: 'Marylebone'
+  W11: 'West London'
+  W1B: 'Marylebone'
+  W1C: 'Mayfair'
+  W1D: 'Soho'
+  W1F: 'Soho'
+  W1J: 'Mayfair'
+  W1K: 'Mayfair'
+  W1S: 'Mayfair'
+  W1T: 'Fitzrovia'
+  W1U: 'Marylebone'
+  W1W: 'Fitzrovia'
+  W2: 'Paddington'
+  WC1: 'Kings Cross'
+  WC1A: 'West Central London'
+  WC1B: 'Fitzrovia'
+  WC1H: 'West Central London'
+  WC1N: 'Bloomsbury'
+  WC1R: 'West Central London'
+  WC1V: 'West Central London'
+  WC1X: 'Kings Cross'
+  WC2: 'West Central London'
+  WC2B: 'West Central London'
+  WC2H: 'West Central London'
+  WC2N: 'West Central London'
+  WC2R: 'West Central London'
 
 
- 'N1', 'N19', 'NW1', 'NW5', 'R7', 'SE1', 'SW1',
-       'SW10', 'SW1A', 'SW1E', 'SW1P', 'SW1Y', 'SW9', 'TW9', 'W1', 'W11',
-       'W1B', 'W1C', 'W1D', 'W1F', 'W1H', 'W1J', 'W1K', 'W1S', 'W1T', 'W1U',
-       'W1W', 'W2', 'W8', 'WC1A', 'WC1B', 'WC1H', 'WC1N', 'WC1R', 'WC1V',
-       'WC1X', 'WC2', 'WC2B', 'WC2E', 'WC2H', 'WC2N', 'WC2R'
-
+areas: [
+  'Belgravia',
+  'Bloomsbury',
+  'Camden',
+  'Chiswick',
+  'Clerkenwell & Farringdon',
+  'Covent Garden',
+  'Euston/Kings Cross',
+  'Fleet Street',
+  'Hammersmith',
+  'Holborn',
+  'Kensington & Chelsea',
+  'Knightsbridge',
+  'London Bridge',
+  'Marylebone',
+  'Mayfair',
+  'Noho/Fitzrovia',
+  'Notting Hill',
+  'Old Street',
+  'Paddington',
+  'Piccadilly',
+  'Shoreditch',
+  'Soho',
+  'Southwark',
+  "St James's",
+  'Vauxhall',
+  'Victoria',
+  'Waterloo',
+  'Westminster'
+  ]
